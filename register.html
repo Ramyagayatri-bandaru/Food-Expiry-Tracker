@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register | Food Expiry Tracker</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="food-logo.png" type="image/png">
+
+  <!-- Toastify CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
+  <!-- Toastify JS -->
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+
+</head>
+
+<body style="
+  background-image: url('welcome-banner.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+">
+
+  <div class="auth-container">
+    <h2>Register to Food Expiry Tracker</h2>
+
+    <form id="registerForm">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" required placeholder="Enter your full name" />
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" required placeholder="Enter your email" />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password (use mobile number)</label>
+        <input type="password" id="password" name="password" required minlength="6" placeholder="Create a password" />
+      </div>
+
+      <button type="submit" class="btn">Register</button>
+
+      <p class="redirect">Already have an account? <a href="login.html">Login here</a></p>
+    </form>
+  </div>
+
+  <script src="auth.js"></script>
+</body>
+
+</html>
