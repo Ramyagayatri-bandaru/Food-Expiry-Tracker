@@ -5,7 +5,7 @@ const foodForm = document.getElementById('foodForm');
 const foodNameInput = document.getElementById('foodName');
 const expiryDateInput = document.getElementById('expiryDate');
 const quantityInput = document.getElementById('quantity');
-const foodList = document.getElementById('foodList');
+const foodList = document.getElementById('foodItems');
 const searchInput = document.getElementById('searchInput');
 
 // ----------------------------
