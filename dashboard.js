@@ -6,110 +6,184 @@ const foodNameInput = document.getElementById('foodName');
 const expiryDateInput = document.getElementById('expiryDate');
 const quantityInput = document.getElementById('quantity');
 const foodList = document.getElementById('foodItems');
+const logoutBtn = document.getElementById('logoutBtn');
 const searchInput = document.getElementById('searchInput');
+const sortSelect = document.getElementById('sortSelect');
+
+// User info stored after login
+const userEmail = localStorage.getItem("userEmail");
+const Username = localStorage.getItem("name");
+
+// Auth token
+const token = localStorage.getItem('token');
+if (!token) {
+    console.error("Please login first!");
+    setTimeout(() => window.location.href = 'login.html', 1500);
+}
+
+// API base
+const API_BASE = 'https://food-expiry-tracker-backend-h11q.onrender.com/api/food';
+
+// Global state
+let foodData = [];
+let editingId = null;
 
 // ----------------------------
-// Load Items from Local Storage
+// Fetch food items from backend
 // ----------------------------
-document.addEventListener('DOMContentLoaded', loadItems);
+async function fetchFoodItems() {
+    try {
+        const response = await fetch(API_BASE, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        const foods = await response.json();
+        foodData = foods;
+        renderFoodItems(foodData);
 
-function loadItems() {
-  const items = JSON.parse(localStorage.getItem('foodItems')) || [];
-  renderItems(items);
+        // ❌ Removed auto-email sending logic
+        // checkForExpiryNotifications();
+    } catch (err) {
+        console.error('Error fetching foods:', err);
+    }
 }
 
 // ----------------------------
-// Render Food Items
+// Render food items
 // ----------------------------
-function renderItems(items) {
-  foodList.innerHTML = '';
+function renderFoodItems(items) {
+    foodList.innerHTML = '';
 
-  items.forEach((item, index) => {
-    const listItem = document.createElement('li');
-    listItem.className =
-      'flex justify-between items-center bg-white shadow-md p-3 mb-2 rounded-lg';
+    const now = new Date();
 
-    // Format date as DD Month YYYY
-    const formattedDate = new Date(item.expiryDate).toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
+    items.forEach((item) => {
+        const expiryDate = new Date(item.expiryDate);
+        const isExpired = expiryDate < now;
+
+        // Skip items expired more than 7 days ago
+        if (isExpired && (now - expiryDate) / (1000 * 60 * 60 * 24) > 7) {
+            return;
+        }
+
+        const li = document.createElement('li');
+        li.className = isExpired ? 'expired' : '';
+        li.innerHTML = `
+            <strong>${item.name}</strong> (Qty: ${item.quantity}) - Expires on ${expiryDate.toLocaleDateString()}
+            <button class="edit-btn" ${isExpired ? 'disabled style="cursor:not-allowed"' : ''} onclick="${!isExpired ? `startEdit('${item._id}')` : ''}">Edit</button>
+            <button class="delete-btn" ${isExpired ? 'disabled style="cursor:not-allowed"' : ''} onclick="${!isExpired ? `deleteFood('${item._id}')` : ''}">Delete</button>
+        `;
+        foodList.appendChild(li);
     });
-
-    listItem.innerHTML = `
-      <span class="text-gray-700">${item.name} 
-        <small class="text-gray-500">(Qty: ${item.quantity}, Expires: ${formattedDate})</small>
-      </span>
-      <div>
-        <button onclick="editItem(${index})" class="text-blue-500 hover:text-blue-700 mr-2">Edit</button>
-        <button onclick="deleteItem(${index})" class="text-red-500 hover:text-red-700">Delete</button>
-      </div>
-    `;
-
-    foodList.appendChild(listItem);
-  });
 }
 
 // ----------------------------
-// Add / Edit Food Item
+// Add or update food item (toast logic stays as is!)
 // ----------------------------
-foodForm.addEventListener('submit', (e) => {
-  e.preventDefault();
+foodForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = foodNameInput.value.trim();
+    const expiryDate = expiryDateInput.value;
+    const quantity = parseInt(quantityInput.value);
 
-  const name = foodNameInput.value.trim();
-  const expiryDate = expiryDateInput.value;
-  const quantity = quantityInput.value;
+    if (!name || !expiryDate || isNaN(quantity) || quantity < 1) {
+        console.error('Please enter valid food name, quantity, and expiry date');
+        return;
+    }
 
-  if (!name || !expiryDate || !quantity) return;
+    const payload = { name, expiryDate, quantity };
 
-  const items = JSON.parse(localStorage.getItem('foodItems')) || [];
+    try {
+        let res;
+        if (editingId) {
+            res = await fetch(`${API_BASE}/${editingId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify(payload),
+            });
+            if (!res.ok) throw new Error("Failed to update");
+            console.log('Food updated successfully');
+            editingId = null;
+        } else {
+            res = await fetch(API_BASE, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify(payload),
+            });
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.errors?.[0]?.msg || "Failed to add food");
+            }
+            console.log('Food added successfully');
+        }
 
-  if (foodForm.dataset.editIndex) {
-    // Editing existing item
-    items[foodForm.dataset.editIndex] = { name, expiryDate, quantity };
-    delete foodForm.dataset.editIndex;
-  } else {
-    // Adding new item
-    items.push({ name, expiryDate, quantity });
-  }
+        foodForm.reset();
+        await fetchFoodItems();
 
-  localStorage.setItem('foodItems', JSON.stringify(items));
-  foodForm.reset();
-  renderItems(items);
+    } catch (err) {
+        console.error(err.message);
+    }
+}); 
+
+
+// ----------------------------
+// Start editing
+// ----------------------------
+window.startEdit = function(id) {
+    const item = foodData.find(f => f._id === id);
+    if (!item) return;
+    foodNameInput.value = item.name;
+    expiryDateInput.value = item.expiryDate.split('T')[0];
+    quantityInput.value = item.quantity;
+    editingId = id;
+};
+
+// ----------------------------
+// Delete
+// ----------------------------
+async function deleteFood(id) {
+    const confirmDelete = confirm("Delete this item?");
+    if (!confirmDelete) return;
+
+    try {
+        await fetch(`${API_BASE}/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log("Deleted successfully");
+        await fetchFoodItems();
+    } catch (err) {
+        console.error("Error deleting food", err);
+    }
+}
+
+// ----------------------------
+// Logout
+// ----------------------------
+logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('name');
+    localStorage.removeItem('emailedToday'); // cleanup
+
+    console.log("Logged out");
+    window.location.href = 'login.html';
 });
 
 // ----------------------------
-// Edit Item
-// ----------------------------
-function editItem(index) {
-  const items = JSON.parse(localStorage.getItem('foodItems')) || [];
-  const item = items[index];
-
-  foodNameInput.value = item.name;
-  expiryDateInput.value = item.expiryDate;
-  quantityInput.value = item.quantity;
-
-  foodForm.dataset.editIndex = index;
-}
-
-// ----------------------------
-// Delete Item
-// ----------------------------
-function deleteItem(index) {
-  const items = JSON.parse(localStorage.getItem('foodItems')) || [];
-  items.splice(index, 1);
-  localStorage.setItem('foodItems', JSON.stringify(items));
-  renderItems(items);
-}
-
-// ----------------------------
-// Search / Filter Items
+// Search & Sort
 // ----------------------------
 searchInput.addEventListener('input', () => {
-  const query = searchInput.value.toLowerCase();
-  const items = JSON.parse(localStorage.getItem('foodItems')) || [];
-  const filtered = items.filter((item) =>
-    item.name.toLowerCase().includes(query)
-  );
-  renderItems(filtered);
+    const q = searchInput.value.toLowerCase();
+    renderFoodItems(foodData.filter(f => f.name.toLowerCase().includes(q)));
 });
+
+sortSelect.addEventListener('change', () => {
+    let sorted = [...foodData];
+    if (sortSelect.value === 'expiry') sorted.sort((a,b) => new Date(a.expiryDate) - new Date(b.expiryDate));
+    if (sortSelect.value === 'quantity') sorted.sort((a,b) => b.quantity - a.quantity);
+    renderFoodItems(sorted);
+});
+
+// ----------------------------
+// Init
+// ----------------------------
+fetchFoodItems();
