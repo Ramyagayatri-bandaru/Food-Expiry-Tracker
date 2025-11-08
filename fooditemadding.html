@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Food Item | Food Expiry Tracker</title>
+    <link rel="icon" href="food-logo.png" type="image/png">
+
+    <!-- Toastify CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
+    <style>
+        * {
+
+            input,
+            textarea {
+                color: #8a683b;
+            }
+
+            input::placeholder {
+                color: #8a683b !important;
+            }
+
+            input:focus {
+                border: 2px solid #8a683b !important;
+                outline: none;
+            }
+
+            input[type="date"] {
+                color: #8a683b;
+            }
+
+            select {
+                color: #8a683b;
+            }
+
+            select option {
+                color: #8a683b;
+                background-color: #f9ead5;
+            }
+
+        }
+
+        body {
+            font-family: "Poppins", sans-serif;
+            background: #f9ead5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .toastify {
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: #8a683b;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 18px;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+        }
+
+        .nav-left a {
+            text-decoration: none;
+            color: white;
+            font-weight: 500;
+            font-size: 16px;
+            transition: 0.2s;
+        }
+
+        .nav-left a:hover {
+            color: #f9ead5;
+        }
+
+        .nav-left a.active {
+            color: #f9ead5;
+            font-weight: 700;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logout-btn {
+            background: #8a683b;
+            color: white;
+            border: 1px solid #f9ead5;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            opacity: 0.95;
+        }
+
+        #d-header img {
+            width: 100px;
+        }
+
+        /* Container */
+        .container {
+            width: 90%;
+            margin: 36px auto;
+            background: #f9ead5;
+            padding: 28px;
+            border-radius: 12px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #8a683b;
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-top: 12px;
+            color: #8a683b;
+        }
+
+        input[type="text"],
+        input[type="date"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            border: 1px solid #d0d7de;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            background: #8a683b;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 18px;
+            transition: background 0.2s;
+        }
+
+
+        @media (max-width: 520px) {
+            .container {
+                padding: 16px;
+            }
+
+            #d-header img {
+                width: 70px;
+            }
+
+            input[type="text"],
+            input[type="date"] {
+                width: 92%;
+                padding: 10px;
+                margin-top: 6px;
+                border: 1px solid #d0d7de;
+                border-radius: 8px;
+                font-size: 15px;
+            }
+
+            .nav-left {
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 520px) {
+            #d-header img {
+                width: 50px;
+            }
+
+            .nav-left {
+                gap: 16px;
+            }
+
+            .nav-left a {
+                text-decoration: none;
+                color: white;
+                font-weight: 500;
+                font-size: 10px;
+                transition: 0.2s;
+            }
+
+            .logout-btn {
+                background: #8a683b;
+                color: white;
+                border: 1px solid #f9ead5;
+                padding: 6px 6px;
+                border-radius: 6px;
+                font-weight: 600;
+                cursor: pointer;
+                font-size: 10px;
+            }
+
+            .qty-input {
+                width: 92% !important;
+                margin-top: 6px;
+                padding: 10px;
+                border-radius: 8px;
+                border: 1px solid #d0d7de;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-left">
+            <header id="d-header">
+                <img src="food-logo.png" alt="logo" />
+            </header>
+            <a href="fooditemadding.html" class="nav-link">Add Item</a>
+            <a href="itemstobeexpired.html" class="nav-link">Items to Expire</a>
+            <a href="itemsexpired.html" class="nav-link">Expired Items</a>
+        </div>
+
+        <div class="nav-right">
+            <span id="welcomeText" style="color:#fff;font-weight:500;display:none;"></span>
+            <button class="logout-btn" id="logoutBtn">Logout</button>
+        </div>
+    </nav>
+
+    <!-- Form -->
+    <div class="container">
+        <h2>Add Food Item</h2>
+        <form id="foodForm">
+            <label for="foodName">Food Name:</label>
+            <input type="text" id="foodName" placeholder="Enter food name" required />
+
+            <label for="mfdDate">Manufacturing Date:</label>
+            <input type="date" id="mfdDate" required />
+
+            <label for="expiryDate">Expiry Date:</label>
+            <input type="date" id="expiryDate" required />
+
+            <label for="quantity">Quantity(Items/kgs/lts):</label>
+            <input class="qty-input" style="width: 100%;
+    padding: 10px;margin-top: 6px;
+    border-radius: 8px;
+    border: 1px solid #d0d7de;" type="number" id="quantity" placeholder="Enter quantity" required />
+
+            <button type="submit">Add Item</button>
+        </form>
+    </div>
+
+    <!-- Toastify -->
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <script>
+        // ✅ Correct API endpoint for your Render backend
+        const API_BASE = "https://food-expiry-tracker-backend-h11q.onrender.com/api/food";
+
+        function showToast(message, bgColor = "#333") {
+            Toastify({
+                text: message,
+                duration: 2600,
+                gravity: "top",
+                position: "center",
+                close: true,
+                stopOnFocus: true,
+                style: { background: bgColor }
+            }).showToast();
+        }
+
+        // Highlight current page
+        (function () {
+            const current = location.pathname.split("/").pop() || "fooditemadding.html";
+            document.querySelectorAll(".nav-link").forEach(link => {
+                if (link.getAttribute("href") === current) link.classList.add("active");
+            });
+        })();
+
+        // Logout button
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+            localStorage.removeItem("loggedInUser");
+            showToast("Logged out successfully", "#27ae60");
+            setTimeout(() => (window.location.href = "index.html"), 700);
+        });
+
+        // Add item to backend
+        document.getElementById("foodForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById("foodName").value.trim();
+            const manufactureDate = document.getElementById("mfdDate").value;
+            const expiryDate = document.getElementById("expiryDate").value;
+            const quantity = document.getElementById("quantity").value.trim();
+
+            if (!name || !manufactureDate || !expiryDate || !quantity) {
+                showToast("Please fill all fields", "#e67e22");
+                return;
+            }
+
+            if (new Date(expiryDate) <= new Date(manufactureDate)) {
+                showToast("Expiry date must be after manufacturing date", "#e74c3c");
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem("token"); // JWT if applicable
+
+                const res = await fetch(API_BASE, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        ...(token ? { Authorization: `Bearer ${token}` } : {})
+                    },
+                    body: JSON.stringify({ name, manufactureDate, expiryDate, quantity })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    showToast("Food item added successfully!", "#27ae60");
+                    e.target.reset();
+                } else {
+                    showToast(data.message || "Failed to add item", "#e74c3c");
+                }
+            } catch (err) {
+                console.error("Error:", err);
+                showToast("Server error. Please try again.", "#e74c3c");
+            }
+        });
+    </script>
+</body>
+
+</html>
